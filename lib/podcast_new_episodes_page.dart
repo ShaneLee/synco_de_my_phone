@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:synco_de_my_phone/podcast_episode_page.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'config.dart';
 import 'downloader.dart';
 
 class Podcast {
@@ -51,6 +52,8 @@ class Podcast {
 }
 
 class PodcastNewEpisodesPage extends StatefulWidget {
+  const PodcastNewEpisodesPage({super.key});
+
   @override
   _PodcastNewEpisodesPageState createState() => _PodcastNewEpisodesPageState();
 }
@@ -60,7 +63,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
   final Downloader downloader = Downloader();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
-    'tempUserId': 'bd11dcc2-77f6-430f-8e87-5839d31ab0e3',
+    'tempUserId': Config.tempUserId
   };
 
   @override
@@ -73,7 +76,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
     final response = await http.get(
       headers: headers,
       Uri.parse(
-          'http://192.168.0.46:8080/podcast/new?page=0&size=50&sort=publishedDate,desc'),
+          '${Config.sorg}/podcast/new?page=0&size=50&sort=publishedDate,desc'),
     );
 
     if (response.statusCode == 200) {

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
+import 'config.dart';
+
 class FileUploadPage extends StatefulWidget {
   final String sourceDirectory;
   final String targetDirectory;
@@ -34,7 +36,6 @@ class _FileUploadPageState extends State<FileUploadPage> {
     final now = DateTime.now();
     final sevenDaysAgo = now.subtract(const Duration(days: 7));
 
-    // List all files in the directory
     List<FileSystemEntity> allFiles = directory.listSync(recursive: true);
 
     // Filter files that are less than 7 days old
@@ -43,10 +44,8 @@ class _FileUploadPageState extends State<FileUploadPage> {
         .where((file) => file.lastModifiedSync().isAfter(sevenDaysAgo))
         .toList();
 
-    // Check which files already exist on the server
     await _checkFilesOnServer();
 
-    // Update the UI
     setState(() {});
   }
 
@@ -54,7 +53,7 @@ class _FileUploadPageState extends State<FileUploadPage> {
     List<String> localFileNames = filesToUpload.map((file) => path.basename(file.path)).toList();
 
     // Prepare the data for the diff API
-    final request = http.MultipartRequest('POST', Uri.parse('http://192.168.0.46:8000/diff'));
+    final request = http.MultipartRequest('POST', Uri.parse('${Config.synco}/diff'));
     request.files.add(
       http.MultipartFile.fromString(
         'file',
@@ -78,20 +77,17 @@ class _FileUploadPageState extends State<FileUploadPage> {
   Future<void> _uploadFile(File file) async {
     final fileName = path.relative(file.path, from: widget.sourceDirectory);
 
-    var request = http.MultipartRequest('POST', Uri.parse('http://192.168.0.46:8000/upload'));
+    var request = http.MultipartRequest('POST', Uri.parse('${Config.synco}/upload'));
 
-    // Add the file part
     request.files.add(http.MultipartFile(
-      'file',  // Field name for the file
+      'file',
       file.openRead(),
       await file.length(),
       filename: path.basename(file.path),
     ));
 
-    // Add the file_path part
     request.fields['file_path'] = path.join(widget.targetDirectory, fileName);
 
-    // Send the request
     var response = await request.send();
 
     if (response.statusCode == 200) {
@@ -100,8 +96,6 @@ class _FileUploadPageState extends State<FileUploadPage> {
       print('Failed to upload: $fileName, Status Code: ${response.statusCode}');
     }
   }
-
-
 
   Future<void> _uploadFiles() async {
     for (File file in filesToUpload) {

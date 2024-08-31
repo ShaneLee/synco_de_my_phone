@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:synco_de_my_phone/file_upload_page.dart';
 import 'package:synco_de_my_phone/folder_list_page.dart';
 import 'package:synco_de_my_phone/podcast_listen_later_page.dart';
 import 'package:synco_de_my_phone/podcast_new_episodes_page.dart';
 import 'apk_installer_page.dart';
+import 'config.dart';
 import 'generic_download_page.dart';
 import 'podcast_download_page.dart';
 
-void main() {
+void main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 
@@ -16,7 +19,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Synco de my phone',
       home: MyHomePage(),
     );
@@ -24,6 +27,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +44,7 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => GenericDownloadPage()),
+                      builder: (context) => const GenericDownloadPage()),
                 );
               },
               child: const Text('Go to Generic Downloads'),
@@ -59,7 +64,7 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => PodcastNewEpisodesPage()),
+                      builder: (context) => const PodcastNewEpisodesPage()),
                 );
               },
               child: const Text('Go to new Podcast Episodes'),
@@ -69,7 +74,7 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => PodcastListenLaterPage()),
+                      builder: (context) => const PodcastListenLaterPage()),
                 );
               },
               child: const Text('Go to new Podcast Listen Later'),
@@ -79,10 +84,10 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) =>
-                      const FolderListPage(
-                        rootUrl: 'http://192.168.0.46/synco/audiobooks-library/',
+                      FolderListPage(
+                        rootUrl: '${Config.server}/synco/audiobooks-library/',
                         saveFolder:  '/storage/sdcard1/Audiobooks/',
-                        extensions: {'.mp3', '.mp4', '.m4a'},
+                        extensions: const {'.mp3', '.mp4', '.m4a'},
                       ),
                   ),
                 );
@@ -109,7 +114,7 @@ class MyHomePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) =>
-                  ApkInstallerPage(),
+                  const ApkInstallerPage(),
                   ),
                 );
               },

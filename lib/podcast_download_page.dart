@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:synco_de_my_phone/podcast_episode_page.dart';
 import 'dart:convert';
+import 'config.dart';
 import 'downloader.dart';
 
 class Podcast {
@@ -42,7 +43,7 @@ class _PodcastDownloadPageState extends State<PodcastDownloadPage> {
   final Downloader downloader = Downloader();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
-    'tempUserId': 'bd11dcc2-77f6-430f-8e87-5839d31ab0e3',
+    'tempUserId': Config.tempUserId
   };
 
   @override
@@ -55,15 +56,12 @@ class _PodcastDownloadPageState extends State<PodcastDownloadPage> {
     final response = await http.get(
       headers: headers,
       Uri.parse(
-          'http://192.168.0.46:8080/podcast/subscribed?page=0&size=50&sort=createdAtUtc,desc'),
+          '${Config.sorg}/podcast/subscribed?page=0&size=50&sort=createdAtUtc,desc'),
     );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       final List<dynamic> content = data['content'];
-
-      // Debug output to check data
-      print('Fetched podcasts data: $content');
 
       return content.map((podcast) => Podcast.fromJson(podcast)).toList();
     } else {

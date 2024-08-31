@@ -12,7 +12,6 @@ class AudioPlayerManager {
   }
 
   Future<void> setUpPlayer(String filePath, {bool isUrl = false}) async {
-    // Set up the player with necessary context (e.g., keep awake)
     if (Platform.isAndroid) {
       await _player.setAudioContext(AudioContext(android: const AudioContextAndroid(stayAwake: true)));
     } else if (Platform.isIOS) {

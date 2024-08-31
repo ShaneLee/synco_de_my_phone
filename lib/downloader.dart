@@ -76,8 +76,7 @@ class Downloader {
 
     // Create necessary directories if they do not exist
     try {
-      final directory =
-          file.parent; // Get the directory path from the file path
+      final directory = file.parent; // Get the directory path from the file path
       if (!await directory.exists()) {
         await directory.create(recursive: true);
         print('Directory created: ${directory.path}');

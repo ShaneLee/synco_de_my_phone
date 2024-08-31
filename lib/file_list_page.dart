@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'package:synco_de_my_phone/config.dart';
 import 'package:synco_de_my_phone/downloader.dart';
 import 'audio_player_manager.dart';
 import 'search_box.dart';
@@ -168,7 +169,7 @@ class _FileListPageState extends State<FileListPage> {
       ),
       body: Column(
         children: [
-          SearchBox(onSearch: _filterFiles),  // Add the search box here
+          SearchBox(onSearch: _filterFiles),
           Expanded(
             child: FutureBuilder<List<FileInfo>>(
               future: _filesFuture,

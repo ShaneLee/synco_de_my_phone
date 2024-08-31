@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'config.dart';
 import 'downloader.dart';
 import 'search_box.dart';
 
@@ -47,7 +48,8 @@ class PodcastEpisodesPage extends StatefulWidget {
   final String podcastTitle;
   final String podcastId;
 
-  PodcastEpisodesPage({super.key, required this.podcastTitle, required this.podcastId});
+  PodcastEpisodesPage(
+      {super.key, required this.podcastTitle, required this.podcastId});
 
   @override
   _PodcastEpisodesPageState createState() => _PodcastEpisodesPageState();
@@ -59,7 +61,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
   final Downloader downloader = Downloader();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
-    'tempUserId': 'bd11dcc2-77f6-430f-8e87-5839d31ab0e3',
+    'tempUserId': Config.tempUserId
   };
   bool isLoading = false;
   bool hasMore = true;
@@ -82,7 +84,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
       final response = await http.get(
         headers: headers,
         Uri.parse(
-            'http://192.168.0.46:8080/podcast/episodes?podcastId=${widget.podcastId}&page=$page&size=20'),
+            '${Config.sorg}/podcast/episodes?podcastId=${widget.podcastId}&page=$page&size=20'),
       );
 
       if (response.statusCode == 200) {
@@ -157,7 +159,8 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
   void _filterEpisodes(String query) {
     setState(() {
       filteredEpisodes = episodes
-          .where((episode) => episode.episodeTitle.toLowerCase().contains(query.toLowerCase()))
+          .where((episode) =>
+              episode.episodeTitle.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -183,12 +186,14 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                   }
 
                   final podcast = filteredEpisodes[index];
-                  final savePath = '/storage/sdcard1/Podcasts/${podcast.fileName}';
+                  final savePath =
+                      '/storage/sdcard1/Podcasts/${podcast.fileName}';
 
                   return FutureBuilder<bool>(
                     future: File(savePath).exists(),
                     builder: (context, fileSnapshot) {
-                      if (fileSnapshot.connectionState == ConnectionState.waiting) {
+                      if (fileSnapshot.connectionState ==
+                          ConnectionState.waiting) {
                         return ListTile(
                           leading: Image.network(podcast.coverUrl),
                           title: Text(podcast.episodeTitle),
@@ -199,7 +204,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                         final fileExists = fileSnapshot.data == true;
                         final icon = fileExists ? Icons.delete : Icons.download;
                         final statusText =
-                        fileExists ? 'File exists' : 'File not downloaded';
+                            fileExists ? 'File exists' : 'File not downloaded';
 
                         return ListTile(
                           leading: Image.network(podcast.coverUrl),
@@ -214,7 +219,8 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                                 setState(() {
                                   // Update UI for download status
                                 });
-                                await downloader.downloadFile(podcast.url, savePath);
+                                await downloader.downloadFile(
+                                    podcast.url, savePath);
                                 setState(() {
                                   // Refresh UI to reflect the downloaded status
                                 });
