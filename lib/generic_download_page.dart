@@ -40,14 +40,14 @@ class _GenericDownloadPageState extends State<GenericDownloadPage> {
       downloadedFiles = [...ebooks, ...music, ...audiobooks];
 
       // Filter the list to only include files with a status of 'success'
-      downloadedFiles =
-          downloadedFiles.where((file) => file.status == 'success').toList();
+      List<FileStatus> successfulDownloads =
+      downloadedFiles.where((file) => file.status == 'Success').toList();
 
       // Count the number of files that were not downloaded successfully
-      notDownloadedCount = ebooks.length +
-          music.length +
-          audiobooks.length -
-          downloadedFiles.length;
+      notDownloadedCount = downloadedFiles.length - successfulDownloads.length;
+
+      // Update the list to only show successful downloads
+      downloadedFiles = successfulDownloads;
     });
   }
 
@@ -69,7 +69,7 @@ class _GenericDownloadPageState extends State<GenericDownloadPage> {
         onRefresh: _refreshFiles,
         child: Column(
           children: [
-            // Display the count of files that weren't downloaded successfully
+            // Display the count of files that weren't downloaded
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
@@ -86,11 +86,9 @@ class _GenericDownloadPageState extends State<GenericDownloadPage> {
                       downloadedFiles[index].savePath,
                     ),
                     subtitle: Text(
-                      downloadedFiles[index].status,
-                      style: TextStyle(
-                        color: downloadedFiles[index].status == 'success'
-                            ? Colors.black
-                            : Colors.red,
+                      'Status: ${downloadedFiles[index].status}',
+                      style: const TextStyle(
+                        color: Colors.black,
                       ),
                     ),
                   );
