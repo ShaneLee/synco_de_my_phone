@@ -65,6 +65,7 @@ void main() async {
     'fetchEpisodesTask',
     initialDelay: getInitialDelayFor5AM(),
     frequency: const Duration(days: 1),
+    inputData: {}
   );
   runApp(const MyApp());
 }
