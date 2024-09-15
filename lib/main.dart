@@ -66,7 +66,6 @@ void main() async {
     initialDelay: getInitialDelayFor5AM(),
     frequency: const Duration(days: 1),
   );
-  await PodcastClient().fetchNewPodcastEpisodes();
   runApp(const MyApp());
 }
 
