@@ -1,55 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:synco_de_my_phone/model/podcast_episode.dart';
 import 'package:synco_de_my_phone/podcast_episode_page.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'config.dart';
 import 'downloader.dart';
-
-class Podcast {
-  final String id;
-  final String podcastTitle;
-  final String episodeTitle;
-  final String fileName;
-  final String coverUrl;
-  final String url;
-
-  Podcast({
-
-    required this.id,
-    required this.podcastTitle,
-    required this.episodeTitle,
-    required this.fileName,
-    required this.coverUrl,
-    required this.url,
-  });
-
-  static String sanitizeFilename(String filename) {
-    return filename
-        .replaceAll(' ', '-')
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
-        .trim();
-  }
-
-  static String sanitizeEpisodeName(String filename) {
-    return filename
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
-        .trim();
-  }
-
-  factory Podcast.fromJson(Map<String, dynamic> json) {
-    return Podcast(
-      id: json['podcastId'],
-      podcastTitle: json['podcastTitle'],
-      episodeTitle: sanitizeEpisodeName(json['episodeTitle']),
-      fileName: '${sanitizeFilename(json['episodeTitle'])}.mp3',
-      coverUrl: json['coverUrl'],
-      url: json['url'],
-    );
-  }
-}
 
 class PodcastNewEpisodesPage extends StatefulWidget {
   const PodcastNewEpisodesPage({super.key});
@@ -59,7 +15,7 @@ class PodcastNewEpisodesPage extends StatefulWidget {
 }
 
 class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
-  late Future<List<Podcast>> podcasts;
+  late Future<List<PodcastEpisode>> podcasts;
   final Downloader downloader = Downloader();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -72,7 +28,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
     podcasts = fetchPodcasts();
   }
 
-  Future<List<Podcast>> fetchPodcasts() async {
+  Future<List<PodcastEpisode>> fetchPodcasts() async {
     final response = await http.get(
       headers: headers,
       Uri.parse(
@@ -86,7 +42,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
       // Debug output to check data
       print('Fetched podcasts data: $content');
 
-      return content.map((podcast) => Podcast.fromJson(podcast)).toList();
+      return content.map((podcast) => PodcastEpisode.fromJson(podcast)).toList();
     } else {
       throw Exception('Failed to load podcasts');
     }
@@ -132,7 +88,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshPodcasts,
-        child: FutureBuilder<List<Podcast>>(
+        child: FutureBuilder<List<PodcastEpisode>>(
           future: podcasts,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
