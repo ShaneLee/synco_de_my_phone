@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:synco_de_my_phone/client/podcast_client.dart';
 import 'package:synco_de_my_phone/model/podcast_episode.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -19,6 +20,7 @@ class _PodcastListenLaterPageState extends State<PodcastListenLaterPage> {
   List<PodcastEpisode> episodes = [];
   List<PodcastEpisode> filteredEpisodes = [];
   final Downloader downloader = Downloader();
+  final PodcastClient client = PodcastClient();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
     'tempUserId': Config.tempUserId
@@ -91,13 +93,13 @@ class _PodcastListenLaterPageState extends State<PodcastListenLaterPage> {
     fetchEpisodes();
   }
 
-  Future<void> _deleteFile(String filePath) async {
+  Future<void> _deleteFile(String filePath, PodcastEpisode episode) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete File'),
         content: const Text(
-            'Have you listened to this file? Are you sure you want to delete it?'),
+            'Have you listened to this file? Are you sure you want to delete it and mark as listened?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -112,7 +114,9 @@ class _PodcastListenLaterPageState extends State<PodcastListenLaterPage> {
     );
 
     if (confirmed == true) {
-      await downloader.deleteFile(filePath);
+      await client
+          .track(episode.id)
+          .then((val) => downloader.deleteFile(filePath));
       setState(() {}); // Refresh UI
     }
   }
@@ -172,7 +176,7 @@ class _PodcastListenLaterPageState extends State<PodcastListenLaterPage> {
                             icon: Icon(icon),
                             onPressed: () async {
                               if (fileExists) {
-                                await _deleteFile(savePath);
+                                await _deleteFile(savePath, podcast);
                               } else {
                                 setState(() {
                                   // Update UI for download status
