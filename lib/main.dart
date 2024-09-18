@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:synco_de_my_phone/client/podcast_client.dart';
@@ -9,7 +11,6 @@ import 'apk_installer_page.dart';
 import 'config.dart';
 import 'generic_download_page.dart';
 import 'podcast_download_page.dart';
-import 'package:cron/cron.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -29,8 +30,7 @@ Future<void> onSelectNotification(String? payload) async {
 void main() async {
   await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
-  var cron = Cron();
-  cron.schedule(Schedule.parse('30 5 * * *'), () async {
+  Timer.periodic(const Duration(hours: 24), (timer) async {
     await PodcastClient().fetchNewPodcastEpisodesAndNotify();
   });
   runApp(const MyApp());
