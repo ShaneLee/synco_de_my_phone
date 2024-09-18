@@ -105,6 +105,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.18.0"
+  cron:
+    dependency: "direct main"
+    description:
+      name: cron
+      sha256: e1b379dec3d7967c8e521a92832a6ac97a11ea4046cbc3e584193a470e3ad8f5
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.1"
   crypto:
     dependency: transitive
     description:
@@ -533,14 +541,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  workmanager:
-    dependency: "direct main"
-    description:
-      name: workmanager
-      sha256: ed13530cccd28c5c9959ad42d657cd0666274ca74c56dea0ca183ddd527d3a00
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.2"
   xdg_directories:
     dependency: transitive
     description:

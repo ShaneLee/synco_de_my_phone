@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:synco_de_my_phone/client/podcast_client.dart';
 import 'package:synco_de_my_phone/model/podcast_episode.dart';
 import 'package:synco_de_my_phone/podcast_episode_page.dart';
-import 'dart:convert';
 import 'dart:io';
-import 'config.dart';
 import 'downloader.dart';
 
 class PodcastNewEpisodesPage extends StatefulWidget {
@@ -17,10 +15,7 @@ class PodcastNewEpisodesPage extends StatefulWidget {
 class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
   late Future<List<PodcastEpisode>> podcasts;
   final Downloader downloader = Downloader();
-  final Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'tempUserId': Config.tempUserId
-  };
+  final client = PodcastClient();
 
   @override
   void initState() {
@@ -29,23 +24,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
   }
 
   Future<List<PodcastEpisode>> fetchPodcasts() async {
-    final response = await http.get(
-      headers: headers,
-      Uri.parse(
-          '${Config.sorg}/podcast/new?page=0&size=50&sort=publishedDate,desc'),
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> content = data['content'];
-
-      // Debug output to check data
-      print('Fetched podcasts data: $content');
-
-      return content.map((podcast) => PodcastEpisode.fromJson(podcast)).toList();
-    } else {
-      throw Exception('Failed to load podcasts');
-    }
+    return client.getNewPodcastEpisodes();
   }
 
   Future<void> _refreshPodcasts() async {
@@ -54,13 +33,13 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
     });
   }
 
-  Future<void> _deleteFile(String filePath) async {
+  Future<void> _deleteFile(String filePath, PodcastEpisode episode) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete File'),
         content: const Text(
-            'Have you listened to this file? Are you sure you want to delete it?'),
+            'Have you listened to this file? Are you sure you want to delete it and mark as listened?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -75,7 +54,9 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
     );
 
     if (confirmed == true) {
-      await downloader.deleteFile(filePath);
+      await client
+          .track(episode.id)
+          .then((val) => downloader.deleteFile(filePath));
       setState(() {}); // Refresh UI
     }
   }
@@ -111,7 +92,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
                       if (fileSnapshot.connectionState ==
                           ConnectionState.waiting) {
                         return ListTile(
-                          leading: Image.network(podcast.coverUrl),
+                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: const Text('Checking file status...'),
                           trailing: const CircularProgressIndicator(),
@@ -130,13 +111,13 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PodcastEpisodesPage(
-                                      podcastTitle: podcast.podcastTitle,
+                                      podcastTitle: podcast.podcastTitle ?? '',
                                       podcastId: podcast.id),
                                 ),
                               );
                             } else if (value == 'download') {
                               if (fileExists) {
-                                _deleteFile(savePath);
+                                _deleteFile(savePath, podcast);
                               } else {
                                 setState(() {
                                   // Update UI for download status
@@ -163,7 +144,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
                             ),
                           ],
                           child: ListTile(
-                            leading: Image.network(podcast.coverUrl),
+                            leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
                             title: Text(podcast.episodeTitle),
                             subtitle: Text(statusText),
                             trailing: Icon(icon),
@@ -171,7 +152,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
                         );
                       } else {
                         return ListTile(
-                          leading: Image.network(podcast.coverUrl),
+                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: const Text('Error checking file status'),
                           trailing: IconButton(

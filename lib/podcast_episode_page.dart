@@ -1,48 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:synco_de_my_phone/client/podcast_client.dart';
+import 'package:synco_de_my_phone/model/podcast_episode.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'config.dart';
 import 'downloader.dart';
 import 'search_box.dart';
-
-class Podcast {
-  final String episodeTitle;
-  final String fileName;
-  final String coverUrl;
-  final String url;
-
-  Podcast({
-    required this.episodeTitle,
-    required this.fileName,
-    required this.coverUrl,
-    required this.url,
-  });
-
-  static String sanitizeFilename(String filename) {
-    return filename
-        .replaceAll(' ', '-')
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
-        .trim();
-  }
-
-  static String sanitizeEpisodeName(String filename) {
-    return filename
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
-        .trim();
-  }
-
-  factory Podcast.fromJson(Map<String, dynamic> json) {
-    return Podcast(
-      episodeTitle: sanitizeEpisodeName(json['episodeTitle']),
-      fileName: '${sanitizeFilename(json['episodeTitle'])}.mp3',
-      coverUrl: json['coverUrl'],
-      url: json['url'],
-    );
-  }
-}
 
 class PodcastEpisodesPage extends StatefulWidget {
   final String podcastTitle;
@@ -56,9 +20,10 @@ class PodcastEpisodesPage extends StatefulWidget {
 }
 
 class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
-  List<Podcast> episodes = [];
-  List<Podcast> filteredEpisodes = [];
+  List<PodcastEpisode> episodes = [];
+  List<PodcastEpisode> filteredEpisodes = [];
   final Downloader downloader = Downloader();
+  final PodcastClient client = PodcastClient();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
     'tempUserId': Config.tempUserId
@@ -101,7 +66,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
           if (mounted) {
             setState(() {
               episodes.addAll(
-                  content.map((podcast) => Podcast.fromJson(podcast)).toList());
+                  content.map((val) => PodcastEpisode.fromJson(val)).toList());
               filteredEpisodes = episodes;
               page++;
             });
@@ -130,13 +95,13 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
     fetchEpisodes();
   }
 
-  Future<void> _deleteFile(String filePath) async {
+  Future<void> _deleteFile(String filePath, PodcastEpisode episode) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete File'),
         content: const Text(
-            'Have you listened to this file? Are you sure you want to delete it?'),
+            'Have you listened to this file? Are you sure you want to delete it and mark it as played?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -151,7 +116,9 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
     );
 
     if (confirmed == true) {
-      await downloader.deleteFile(filePath);
+      await client
+          .track(episode.id)
+          .then((val) => downloader.deleteFile(filePath));
       setState(() {}); // Refresh UI
     }
   }
@@ -195,7 +162,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                       if (fileSnapshot.connectionState ==
                           ConnectionState.waiting) {
                         return ListTile(
-                          leading: Image.network(podcast.coverUrl),
+                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: const Text('Checking file status...'),
                           trailing: const CircularProgressIndicator(),
@@ -207,14 +174,14 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                             fileExists ? 'File exists' : 'File not downloaded';
 
                         return ListTile(
-                          leading: Image.network(podcast.coverUrl),
+                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: Text(statusText),
                           trailing: IconButton(
                             icon: Icon(icon),
                             onPressed: () async {
                               if (fileExists) {
-                                await _deleteFile(savePath);
+                                await _deleteFile(savePath, podcast);
                               } else {
                                 setState(() {
                                   // Update UI for download status
@@ -230,7 +197,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                         );
                       } else {
                         return ListTile(
-                          leading: Image.network(podcast.coverUrl),
+                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: const Text('Error checking file status'),
                           trailing: IconButton(

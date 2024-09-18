@@ -1,48 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:synco_de_my_phone/model/podcast_episode.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'config.dart';
 import 'downloader.dart';
 import 'search_box.dart';
-
-class Podcast {
-  final String episodeTitle;
-  final String fileName;
-  final String? coverUrl;
-  final String url;
-
-  Podcast({
-    required this.episodeTitle,
-    required this.fileName,
-    required this.coverUrl,
-    required this.url,
-  });
-
-  static String sanitizeFilename(String filename) {
-    return filename
-        .replaceAll(' ', '-')
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
-        .trim();
-  }
-
-  static String sanitizeEpisodeName(String filename) {
-    return filename
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
-        .trim();
-  }
-
-  factory Podcast.fromJson(Map<String, dynamic> json) {
-    return Podcast(
-      episodeTitle: sanitizeEpisodeName(json['episodeTitle'] ?? 'no title'),
-      fileName: '${sanitizeFilename(json['episodeTitle'] ?? json['url'])}.mp3',
-      coverUrl: json['coverUrl'] ?? 'no cover',
-      url: json['url'],
-    );
-  }
-}
 
 class PodcastListenLaterPage extends StatefulWidget {
 
@@ -53,8 +16,8 @@ class PodcastListenLaterPage extends StatefulWidget {
 }
 
 class _PodcastListenLaterPageState extends State<PodcastListenLaterPage> {
-  List<Podcast> episodes = [];
-  List<Podcast> filteredEpisodes = [];
+  List<PodcastEpisode> episodes = [];
+  List<PodcastEpisode> filteredEpisodes = [];
   final Downloader downloader = Downloader();
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -98,7 +61,7 @@ class _PodcastListenLaterPageState extends State<PodcastListenLaterPage> {
           if (mounted) {
             setState(() {
               episodes.addAll(
-                  content.map((podcast) => Podcast.fromJson(podcast)).toList());
+                  content.map((val) => PodcastEpisode.fromJson(val)).toList());
               filteredEpisodes = episodes;
               page++;
             });

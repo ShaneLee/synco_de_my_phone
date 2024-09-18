@@ -5,50 +5,21 @@ import 'package:synco_de_my_phone/file_upload_page.dart';
 import 'package:synco_de_my_phone/folder_list_page.dart';
 import 'package:synco_de_my_phone/podcast_listen_later_page.dart';
 import 'package:synco_de_my_phone/podcast_new_episodes_page.dart';
-import 'package:workmanager/workmanager.dart';
 import 'apk_installer_page.dart';
 import 'config.dart';
 import 'generic_download_page.dart';
 import 'podcast_download_page.dart';
+import 'package:cron/cron.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    // if (task == 'fetchEpisodesTask') {
-      try {
-        await PodcastClient().fetchNewPodcastEpisodes();
-        return Future.value(true);
-      } catch (e) {
-        print("Error in background task: $e");
-        return Future.value(false);
-      }
-    // }
-  });
-}
-
-Duration getInitialDelayFor5AM() {
-  final now = DateTime.now();
-  final tomorrow = DateTime(now.year, now.month, now.day + 1, 5, 0); // 5 AM tomorrow
-
-  Duration delay;
-  if (now.hour < 5) {
-    // It's before 5 AM today, schedule for 5 AM today
-    delay = DateTime(now.year, now.month, now.day, 5, 0).difference(now);
-  } else {
-    // It's after 5 AM, schedule for 5 AM tomorrow
-    delay = tomorrow.difference(now);
-  }
-
-  return delay;
-}
 
 Future<void> onSelectNotification(String? payload) async {
   if (payload != null) {
     switch (payload) {
       case 'navigate_to_new_episodes':
         navigatorKey.currentState?.push(
-          MaterialPageRoute(builder: (context) => const PodcastNewEpisodesPage()),
+          MaterialPageRoute(
+              builder: (context) => const PodcastNewEpisodesPage()),
         );
         break;
     }
@@ -58,17 +29,18 @@ Future<void> onSelectNotification(String? payload) async {
 void main() async {
   await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
-
-  await Workmanager().registerPeriodicTask(
-    'checkForNewEpisodes',
-    'fetchEpisodesTask',
-    initialDelay: getInitialDelayFor5AM(),
-    frequency: const Duration(days: 1),
-    inputData: {}
-  );
+  var cron = Cron();
+  cron.schedule(Schedule.parse('30 5 * * *'), () async {
+    await PodcastClient().fetchNewPodcastEpisodes();
+  });
   runApp(const MyApp());
 }
+
+final ThemeData darkTheme = ThemeData(
+  brightness: Brightness.dark,
+  primaryColor: Colors.blueAccent,
+  hintColor: Colors.teal,
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -79,6 +51,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'Synco de my phone',
       home: const MyHomePage(),
+      theme: darkTheme
     );
   }
 }
@@ -143,7 +116,7 @@ class MyHomePage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) =>
                       FolderListPage(
                         rootUrl: '${Config.server}/synco/audiobooks-library/',
-                        saveFolder:  '/storage/sdcard1/Audiobooks/',
+                        saveFolder: '/storage/sdcard1/Audiobooks/',
                         extensions: const {'.mp3', '.mp4', '.m4a'},
                       ),
                   ),
@@ -157,7 +130,7 @@ class MyHomePage extends StatelessWidget {
                   context,
                   MaterialPageRoute(builder: (context) =>
                   const FileUploadPage(
-                    sourceDirectory:  'storage/emulated/0//DCIM/Camera/',
+                    sourceDirectory: 'storage/emulated/0//DCIM/Camera/',
                     targetDirectory: 'photos',
                     title: 'Upload Photos',
                   ),
