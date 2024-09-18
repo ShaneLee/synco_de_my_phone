@@ -16,7 +16,7 @@ class PodcastClient {
     final response = await http.get(
         Uri.parse(
             '${Config
-                .sorg}/podcast/new?sinceDays=1&page=0&size=3&sort=publishedDate,desc'),
+                .sorg}/podcast/new?page=0&size=50&sort=publishedDate,desc'),
         headers: headers
     );
 
@@ -33,7 +33,7 @@ class PodcastClient {
     return [];
   }
 
-  Future<void> fetchNewPodcastEpisodes() async {
+  Future<void> fetchNewPodcastEpisodesAndNotify() async {
     final response = await http.get(
         Uri.parse(
             '${Config

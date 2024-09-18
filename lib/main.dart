@@ -31,7 +31,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var cron = Cron();
   cron.schedule(Schedule.parse('30 5 * * *'), () async {
-    await PodcastClient().fetchNewPodcastEpisodes();
+    await PodcastClient().fetchNewPodcastEpisodesAndNotify();
   });
   runApp(const MyApp());
 }
