@@ -6,13 +6,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'config.dart';
 import 'downloader.dart';
+import 'menus/episode_long_press_menu.dart';
 import 'search_box.dart';
 
 class PodcastEpisodesPage extends StatefulWidget {
   final String podcastTitle;
   final String podcastId;
 
-  PodcastEpisodesPage(
+  const PodcastEpisodesPage(
       {super.key, required this.podcastTitle, required this.podcastId});
 
   @override
@@ -76,6 +77,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
         throw Exception('Failed to load episodes');
       }
     } catch (e) {
+      // Handle error
     } finally {
       if (mounted) {
         setState(() {
@@ -127,7 +129,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
     setState(() {
       filteredEpisodes = episodes
           .where((episode) =>
-              episode.episodeTitle.toLowerCase().contains(query.toLowerCase()))
+          episode.episodeTitle.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -162,7 +164,9 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                       if (fileSnapshot.connectionState ==
                           ConnectionState.waiting) {
                         return ListTile(
-                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
+                          leading: podcast.coverUrl != null
+                              ? Image.network(podcast.coverUrl!)
+                              : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: const Text('Checking file status...'),
                           trailing: const CircularProgressIndicator(),
@@ -171,33 +175,26 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                         final fileExists = fileSnapshot.data == true;
                         final icon = fileExists ? Icons.delete : Icons.download;
                         final statusText =
-                            fileExists ? 'File exists' : 'File not downloaded';
+                        fileExists ? 'File exists' : 'File not downloaded';
 
-                        return ListTile(
-                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
-                          title: Text(podcast.episodeTitle),
-                          subtitle: Text(statusText),
-                          trailing: IconButton(
-                            icon: Icon(icon),
-                            onPressed: () async {
-                              if (fileExists) {
-                                await _deleteFile(savePath, podcast);
-                              } else {
-                                setState(() {
-                                  // Update UI for download status
-                                });
-                                await downloader.downloadFile(
-                                    podcast.url, savePath);
-                                setState(() {
-                                  // Refresh UI to reflect the downloaded status
-                                });
-                              }
-                            },
-                          ),
+                        return EpisodeLongPressMenu(
+                          episode: podcast,
+                          client: client,
+                          downloader: downloader,
+                          savePath: savePath,
+                          fileExists: fileExists,
+                          onMarkedAsListened: () {
+                            setState(() {
+                              // Handle the UI refresh after marking as listened
+                            });
+                          },
+                          onDeleteFile: _deleteFile,
                         );
                       } else {
                         return ListTile(
-                          leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
+                          leading: podcast.coverUrl != null
+                              ? Image.network(podcast.coverUrl!)
+                              : null,
                           title: Text(podcast.episodeTitle),
                           subtitle: const Text('Error checking file status'),
                           trailing: IconButton(
@@ -210,7 +207,7 @@ class _PodcastEpisodesPageState extends State<PodcastEpisodesPage> {
                   );
                 },
               ),
-            ),
+            )
           ],
         ),
       ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:synco_de_my_phone/client/podcast_client.dart';
 import 'package:synco_de_my_phone/model/podcast_episode.dart';
-import 'package:synco_de_my_phone/podcast_episode_page.dart';
 import 'dart:io';
 import 'downloader.dart';
+import 'menus/episode_long_press_menu.dart';
 
 class PodcastNewEpisodesPage extends StatefulWidget {
   const PodcastNewEpisodesPage({super.key});
@@ -39,7 +39,7 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
       builder: (context) => AlertDialog(
         title: const Text('Delete File'),
         content: const Text(
-            'Have you listened to this file? Are you sure you want to delete it and mark as listened?'),
+            'Have you listened to this file? Are you sure you want to delete it and mark it as listened?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -99,56 +99,19 @@ class _PodcastNewEpisodesPageState extends State<PodcastNewEpisodesPage> {
                         );
                       } else if (fileSnapshot.hasData) {
                         final fileExists = fileSnapshot.data == true;
-                        final icon = fileExists ? Icons.delete : Icons.download;
-                        final statusText =
-                            fileExists ? 'File exists' : 'File not downloaded';
 
-                        return PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'episodes') {
-                              // Navigate to the PodcastEpisodesPage
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PodcastEpisodesPage(
-                                      podcastTitle: podcast.podcastTitle ?? '',
-                                      podcastId: podcast.id),
-                                ),
-                              );
-                            } else if (value == 'download') {
-                              if (fileExists) {
-                                _deleteFile(savePath, podcast);
-                              } else {
-                                setState(() {
-                                  // Update UI for download status
-                                });
-                                downloader
-                                    .downloadFile(podcast.url, savePath)
-                                    .then((_) {
-                                  setState(() {
-                                    // Refresh UI to reflect the downloaded status
-                                  });
-                                });
-                              }
-                            }
+                        return EpisodeLongPressMenu(
+                          episode: podcast,
+                          client: client,
+                          downloader: downloader,
+                          savePath: savePath,
+                          fileExists: fileExists,
+                          onDeleteFile: _deleteFile,
+                          onMarkedAsListened: () {
+                            setState(() {
+                              // Handle the UI refresh after marking as listened
+                            });
                           },
-                          itemBuilder: (BuildContext context) =>
-                              <PopupMenuEntry<String>>[
-                            const PopupMenuItem<String>(
-                              value: 'episodes',
-                              child: Text('View Episodes'),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'download',
-                              child: Text('Download/Delete'),
-                            ),
-                          ],
-                          child: ListTile(
-                            leading: podcast.coverUrl != null ? Image.network(podcast.coverUrl!) : null,
-                            title: Text(podcast.episodeTitle),
-                            subtitle: Text(statusText),
-                            trailing: Icon(icon),
-                          ),
                         );
                       } else {
                         return ListTile(
