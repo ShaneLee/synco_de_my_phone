@@ -9,14 +9,14 @@ class Podcast {
   final String id;
   final String podcastTitle;
   final String? author;
-  final String? coverUrl;
+  final String coverUrl;
 
   Podcast({
 
     required this.id,
     required this.podcastTitle,
     this.author,
-    this.coverUrl,
+    required this.coverUrl,
   });
 
   // TODO move these model files and make better
@@ -104,8 +104,7 @@ class _PodcastDownloadPageState extends State<PodcastDownloadPage> {
                       if (fileSnapshot.connectionState ==
                           ConnectionState.waiting) {
                         return ListTile(
-                        // TODO - need the coverUrl from the backend
-                          // leading: Image.network(podcast.coverUrl),
+                          leading: Image.network(podcast.coverUrl),
                           title: Text(podcast.podcastTitle),
                         );
                       }
@@ -141,8 +140,7 @@ class _PodcastDownloadPageState extends State<PodcastDownloadPage> {
                             ),
                           ],
                           child: ListTile(
-    // TODO need the cover from the backend
-                            // leading: Image.network(podcast.coverUrl),
+                            leading: Image.network(podcast.coverUrl),
                             title: Text(podcast.podcastTitle),
                             subtitle: Text('Author: ${podcast.author}'),
                             // trailing: Icon(icon),
