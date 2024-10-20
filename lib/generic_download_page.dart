@@ -30,18 +30,20 @@ class _GenericDownloadPageState extends State<GenericDownloadPage> {
         '/storage/emulated/0/kindle/',
         {'.mobi'});
     final music = await downloader.downloadDirectoriesFromFolder(
-        '${Config.server}/synco/music/', '/storage/sdcard1/Music/', {'.mp3'});
+        '${Config.server}/synco/music/',
+        '/storage/sdcard1/Music/',
+        {".mp3", ".mp4", ".m4a", ".m4b"});
     final audiobooks = await downloader.downloadDirectoriesFromFolder(
         '${Config.server}/synco/audiobooks/',
         '/storage/sdcard1/Audiobooks/',
-        {".mp3", ".mp4", ".m4a"});
+        {".mp3", ".mp4", ".m4a", ".m4b"});
 
     setState(() {
       downloadedFiles = [...ebooks, ...music, ...audiobooks];
 
       // Filter the list to only include files with a status of 'success'
       List<FileStatus> successfulDownloads =
-      downloadedFiles.where((file) => file.status == 'Success').toList();
+          downloadedFiles.where((file) => file.status == 'Success').toList();
 
       // Count the number of files that were not downloaded successfully
       notDownloadedCount = downloadedFiles.length - successfulDownloads.length;
@@ -74,7 +76,8 @@ class _GenericDownloadPageState extends State<GenericDownloadPage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 'Files that were not downloaded: $notDownloadedCount',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
